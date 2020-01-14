@@ -1,74 +1,120 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <title>Simple Group Chat on Node.js</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font: 13px Helvetica, Arial; }
-        form { background: #fff; padding: 3px; position: fixed; bottom: 0; width: 100%; border-color: #000; border-top-style: solid; border-top-width: 1px;}
-        form input { border-style: solid; border-width: 1px; padding: 10px; width: 85%; margin-right: .5%; }
-        form button { width: 9%; background: rgb(130, 224, 255); border: none; padding: 10px; margin-left: 2%; }
-        #messages { list-style-type: none; margin: 0; padding: 0; }
-        #messages li { padding: 5px 10px; }
-        #messages li:nth-child(odd) { background: #eee; }
-    </style>
-    <script src="http://code.jquery.com/jquery-1.10.1.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.3.0/socket.io.js" integrity="sha256-bQmrZe4yPnQrLTY+1gYylfNMBuGfnT/HKsCGX+9Xuqo=" crossorigin="anonymous"></script>
-  </head>
-  <body>
-    <audio id="audio" src="audio/ding.mp3" ></audio>
-    <ul id="messages"></ul>
-    <div id="status"></div>
-    <form action="/" method="POST" id="chatForm">
-      <input id="txt" autocomplete="off" autofocus="on" placeholder="type your message here..." /><button>Send</button>
-    </form>
-    <script>
-      // /to determine if the user is typing
-      var timeout = null, time = 2000;
-      var audio = document.getElementById("audio");
-      var socket = io.connect("http://<%= appData.server_ip_address %>:<%= appData.server_port %>");
-      // submit text message without reload/refresh the page
-      $('form').submit(function(e){
-          e.preventDefault(); // prevents page reloading
-          socket.emit('chat_message', $('#txt').val());
-          $('#txt').val('');
-          clearTimeout(timeout);
-          return false;
-      });
-      // append the chat text message
-      socket.on('chat_message', function(msg){
-        if(msg.username != username){
-          audio.play();
-        }
-          $('#messages').append($('<li>').html(msg.message));
-      });
-      // append text if someone is online
-      socket.on('is_online', function(username) {
-          $('#messages').append($('<li>').html(username));
-      });
-      socket.on('writingOn', function(msg) {
-          $('#status').html(msg);
-      });
-      socket.on('writingOff', function(msg) {
-          $('#status').html(msg);
-      });
-      // ask username
-      var username = prompt('Please tell me your name');
-      socket.emit('username', username);
 
-      $(document).on('keyup','form input:text', function(e){
-          if (timeout != null){ // if something is scheduled
-              clearTimeout(timeout); // remove it
-              timeout = null;
-          } else {/* if (!isEmpty) */ // else this is the first stroke
-              socket.emit("writingOn", username);
-          }
-          timeout = setTimeout(function() {
-              socket.emit("writingOff", username);
-              clearTimeout(timeout); // remove it
-              timeout = null;
-          }, /* isEmpty ? 0 : */ time);
-      });
-    </script>
-  </body>
+<head>
+  <title>Simple Group Chat on Node.js</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font: 13px Helvetica, Arial;
+    }
+
+    form {
+      background: #fff;
+      padding: 3px;
+      position: fixed;
+      bottom: 0;
+      width: 100%;
+      border-color: #000;
+      border-top-style: solid;
+      border-top-width: 1px;
+    }
+
+    form input {
+      border-style: solid;
+      border-width: 1px;
+      padding: 10px;
+      width: 85%;
+      margin-right: .5%;
+    }
+
+    form button {
+      width: 9%;
+      background: rgb(130, 224, 255);
+      border: none;
+      padding: 10px;
+      margin-left: 2%;
+    }
+
+    #messages {
+      list-style-type: none;
+      margin: 0;
+      padding: 0;
+    }
+
+    #messages li {
+      padding: 5px 10px;
+    }
+
+    #messages li:nth-child(odd) {
+      background: #eee;
+    }
+  </style>
+  <script src="http://code.jquery.com/jquery-1.10.1.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.3.0/socket.io.js"
+    integrity="sha256-bQmrZe4yPnQrLTY+1gYylfNMBuGfnT/HKsCGX+9Xuqo=" crossorigin="anonymous"></script>
+</head>
+
+<body>
+  <audio id="audio" src="audio/ding.mp3"></audio>
+  <ul id="messages"></ul>
+  <div id="status"></div>
+  <form action="/" method="POST" id="chatForm">
+    <input id="txt" autocomplete="off" autofocus="on" placeholder="type your message here..." /><button>Send</button>
+  </form>
+  <script>
+    // /to determine if the user is typing
+    var timeout = null, time = 2000;
+    var audio = document.getElementById("audio");
+    var socket = io.connect("http://<%= appData.server_ip_address %>:<%= appData.server_port %>");
+    // submit text message without reload/refresh the page
+    $('form').submit(function (e) {
+      e.preventDefault(); // prevents page reloading
+      socket.emit('chat_message', $('#txt').val());
+      $('#txt').val('');
+      clearTimeout(timeout);
+      return false;
+    });
+    // append the chat text message
+    socket.on('chat_message', function (msg) {
+      if (msg.username != username) {
+        audio.play();
+      }
+      $('#messages').append($('<li>').html(msg.message));
+    });
+    // append text if someone is online
+    socket.on('is_online', function (username) {
+      $('#messages').append($('<li>').html(username));
+    });
+    socket.on('writingOn', function (msg) {
+      $('#status').html(msg);
+    });
+    socket.on('writingOff', function (msg) {
+      $('#status').html(msg);
+    });
+    // ask username
+    var username = prompt('Please tell me your name');
+    socket.emit('username', username);
+
+    $(document).on('keyup', 'form input:text', function (e) {
+      if (timeout != null) { // if something is scheduled
+        clearTimeout(timeout); // remove it
+        timeout = null;
+      } else {
+        socket.emit("writingOn", username);
+      }
+      timeout = setTimeout(function () {
+        socket.emit("writingOff", username);
+        clearTimeout(timeout); // remove it
+        timeout = null;
+      }, time);
+    });
+  </script>
+</body>
+
 </html>
