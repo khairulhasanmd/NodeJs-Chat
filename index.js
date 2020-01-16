@@ -3,6 +3,23 @@ const app = express();
 const http = require('http').Server(app);
 const io = require('socket.io')(http);
 const path = require('path');
+const mysql = require('mysql');
+const db_connection = mysql.createConnection({
+	host: 'localhost',
+	user: 'root',
+	password: '',
+	database: 'chat'
+})
+
+db_connection.connect((err)=>{
+	if (err) {
+		console.log("Error connecting with DB");
+		return;
+	};
+	console.log('DB connected!');
+})
+
+
 
 var server_port = 8080;
 var ip_addresses = [];
@@ -26,6 +43,10 @@ io.sockets.on('connection', function(socket){
 	socket.on('username', function(username){
 		socket.username = username;
 		io.emit('is_online', '🔵 <i>' + socket.username + ' joined the chat..</i>');
+		db_connection.query('SELECT * FROM chat_log ', (err,rows) => {
+			if(err) throw err;
+			socket.emit('chat_log', rows);
+		});
 	})
 	socket.on('disconnect', function(username){
 		io.emit('is_online', '🔴 <i>' + socket.username + ' left the chat..</i>');
@@ -40,6 +61,14 @@ io.sockets.on('connection', function(socket){
 		io.emit('chat_message', {
 			'username': socket.username,
 			'message': '<strong>' + socket.username + '</strong>: ' + message
+		});
+		var log = {
+			username: socket.username,
+			message: message
+		}
+		db_connection.query('INSERT INTO chat_log SET ?', log, (err, res) => {
+			if(err) throw err;  
+			console.log('Last insert ID:', res.insertId);
 		});
 	})
 })
@@ -59,3 +88,37 @@ const server = http.listen(8080, function(){
 		console.log('listening on ' + ip_address + ':' + server_port);
 	});
 })
+
+
+
+/* cheat sheet
+
+// sending to sender-client only
+socket.emit('message', "this is a test");
+
+// sending to all clients, include sender
+io.emit('message', "this is a test");
+
+// sending to all clients except sender
+socket.broadcast.emit('message', "this is a test");
+
+// sending to all clients in 'game' room(channel) except sender
+socket.broadcast.to('game').emit('message', 'nice game');
+
+// sending to all clients in 'game' room(channel), include sender
+io.in('game').emit('message', 'cool game');
+
+// sending to sender client, only if they are in 'game' room(channel)
+socket.to('game').emit('message', 'enjoy the game');
+
+// sending to all clients in namespace 'myNamespace', include sender
+io.of('myNamespace').emit('message', 'gg');
+
+// sending to individual socketid
+socket.broadcast.to(socketid).emit('message', 'for your eyes only');
+
+// list socketid
+for (var socketid in io.sockets.sockets) {}
+ OR
+Object.keys(io.sockets.sockets).forEach((socketid) => {});
+*/

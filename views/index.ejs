@@ -91,6 +91,12 @@
     socket.on('is_online', function (username) {
       $('#messages').append($('<li>').html(username));
     });
+    socket.on('chat_log', function (chat_log) {
+      chat_log.forEach(past_message => {
+        $('#messages').append($('<li>').html('<strong>' + past_message.username + '</strong>: ' + past_message.message));
+      });
+      // console.log(log);
+    });
     socket.on('writingOn', function (msg) {
       $('#status').html(msg);
     });
