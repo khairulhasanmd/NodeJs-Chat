@@ -3,21 +3,21 @@ const app = express();
 const http = require('http').Server(app);
 const io = require('socket.io')(http);
 const path = require('path');
-const mysql = require('mysql');
-const db_connection = mysql.createConnection({
-	host: 'localhost',
-	user: 'root',
-	password: 'bismillah',
-	database: 'chat'
-})
+// const mysql = require('mysql');
+// const db_connection = mysql.createConnection({
+// 	host: 'localhost',
+// 	user: 'root',
+// 	password: 'bismillah',
+// 	database: 'chat'
+// })
 
-db_connection.connect((err)=>{
-	if (err) {
-		console.log("Error connecting with DB");
-		return;
-	};
-	console.log('DB connected!');
-})
+// db_connection.connect((err)=>{
+// 	if (err) {
+// 		console.log("Error connecting with DB");
+// 		return;
+// 	};
+// 	console.log('DB connected!');
+// })
 
 
 
@@ -48,10 +48,10 @@ io.sockets.on('connection', function(socket){
 		if(!users.includes(username)){
 			users.push(username);
 		}
-		db_connection.query('SELECT * FROM chat_log ', (err,rows) => {
-			if(err) throw err;
-			socket.emit('chat_log', rows);
-		});
+		// db_connection.query('SELECT * FROM chat_log ', (err,rows) => {
+		// 	if(err) throw err;
+		// 	socket.emit('chat_log', rows);
+		// });
 		io.emit('user_list', users);
 	})
 	socket.on('disconnect', function(username){
@@ -81,10 +81,10 @@ io.sockets.on('connection', function(socket){
 			username: socket.username,
 			message: message
 		}
-		db_connection.query('INSERT INTO chat_log SET ?', log, (err, res) => {
-			if(err) throw err;  
-			console.log('Last insert ID:', res.insertId);
-		});
+		// db_connection.query('INSERT INTO chat_log SET ?', log, (err, res) => {
+		// 	if(err) throw err;  
+		// 	console.log('Last insert ID:', res.insertId);
+		// });
 	})
 })
 
