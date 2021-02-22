@@ -24,6 +24,7 @@ db_connection.connect((err)=>{
 var server_port = 8080;
 var ip_addresses = [];
 //for getting ip address
+var users = [];
 var os = require('os');
 var interfaces = os.networkInterfaces();
 
@@ -42,25 +43,39 @@ app.get('/', function(request, response){
 io.sockets.on('connection', function(socket){
 	socket.on('username', function(username){
 		socket.username = username;
-		io.emit('is_online', '🔵 <i>' + socket.username + ' joined the chat..</i>');
+		// io.emit('is_online', '🔵 <i>' + socket.username + ' joined the chat..</i>');
+		io.emit('is_online', socket.username);
+		if(!users.includes(username)){
+			users.push(username);
+		}
 		db_connection.query('SELECT * FROM chat_log ', (err,rows) => {
 			if(err) throw err;
 			socket.emit('chat_log', rows);
 		});
+		io.emit('user_list', users);
 	})
 	socket.on('disconnect', function(username){
-		io.emit('is_online', '🔴 <i>' + socket.username + ' left the chat..</i>');
+		// io.emit('is_online', '🔴 <i>' + socket.username + ' left the chat..</i>');
+		io.emit('is_offline', socket.username);
+		//remove the user from the user list
+		const index = users.indexOf(username);
+		if (index > -1) {
+		  users.splice(index, 1);
+		}
+		io.emit('user_list', users);
 	})
 	socket.on('writingOn', function(username){
-		io.emit('writingOn', '🔴 <i>' + socket.username + ' is typing a message..</i>');
+		// io.emit('writingOn', '🔴 <i>' + socket.username + ' is typing a message..</i>');
+		io.emit('writingOn', socket.username);
 	})
 	socket.on('writingOff', function(username){
-		io.emit('writingOff', '🔴 <i>' + socket.username + ' stopped typng..</i>');
+		// io.emit('writingOff', '🔴 <i>' + socket.username + ' stopped typng..</i>');
+		io.emit('writingOff', socket.username);
 	})
 	socket.on('chat_message', function(message){
 		io.emit('chat_message', {
 			'username': socket.username,
-			'message': '<strong>' + socket.username + '</strong>: ' + message
+			'message': message
 		});
 		var log = {
 			username: socket.username,
