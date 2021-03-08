@@ -10,6 +10,8 @@ var server_port = 4000;
 var ip_addresses = [];
 //for getting ip address
 var users = [];
+// var rooms = [];
+
 var os = require('os');
 var interfaces = os.networkInterfaces();
 
@@ -25,24 +27,57 @@ app.get('/', function(request, response){
         response.render('index.ejs', {appData: appData});
 })
 
+
+function getRoomUsers(chat_room) {
+        return users.filter(user => user.chat_room === chat_room);
+}
+
+
 io.sockets.on('connection', function(socket){
+
+        socket.on('join_room', ( user ) => {
+                // if(!rooms.includes(room)){
+                //         rooms.push(room);
+                // }
+                user.socket_id = socket.id;
+                socket.join(user.chat_room);
+                          
+                // Broadcast when a user connects
+                // socket.broadcast
+                //   .to(user.chat_room)
+                //   .emit(
+                //     'message',
+                //     formatMessage(botName, `${user.username} has joined the chat`)
+                //   );
+            
+                // Send users and room info
+                io.to(user.chat_room).emit('roomUsers', {
+                  room: user.chat_room,
+                  users: getRoomUsers(user.chat_room)
+                });
+              });
+
         socket.on('user_online', function(user){
                 socket.user = user;
                 // io.emit('is_online', '🔵 <i>' + socket.username + ' joined the chat..</i>');
                 io.emit('is_online', socket.user);
+                user.socket_id = socket.id;
+                // users[user.id] = user;
                 if(!users.includes(user)){
                         users.push(user);
                 }
                 io.emit('user_list', users);
+                // console.log(users);
         })
         socket.on('disconnect', function(user){
                 // io.emit('is_online', '🔴 <i>' + socket.username + ' left the chat..</i>');
                 io.emit('is_offline', socket.user);
                 //remove the user from the user list
                 
-				const index = users.filter(obj => {
-					return obj.email === user.email;
-				});
+                console.log(socket.id);
+                const index = users.filter(obj => {
+                        return obj.socket_id === socket.id;
+                });
                 if (index > -1) {
                   users.splice(index, 1);
                 }
@@ -50,15 +85,14 @@ io.sockets.on('connection', function(socket){
         })
         socket.on('writingOn', function(user){
                 // io.emit('writingOn', '🔴 <i>' + socket.username + ' is typing a message..</i>');
-                io.emit('writingOn', socket.user);
+                io.to(user.chat_room).emit('writingOn', socket.user);
         })
         socket.on('writingOff', function(user){
                 // io.emit('writingOff', '🔴 <i>' + socket.username + ' stopped typng..</i>');
-                io.emit('writingOff', socket.user);
+                io.to(user.chat_room).emit('writingOff', socket.user);
         })
         socket.on('chat_message', function(message){
-                message.user = socket.user;
-                io.emit('chat_message', message);
+                io.to(message.user.chat_room).emit('chat_message', message);
         })
 })
 
