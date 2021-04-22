@@ -27,7 +27,6 @@ app.get('/', function(request, response){
         response.render('index.ejs', {appData: appData});
 })
 
-
 function getRoomUsers(chat_room) {
         return users.filter(user => user.chat_room === chat_room);
 }
@@ -93,6 +92,7 @@ io.sockets.on('connection', function(socket){
         })
         socket.on('chat_message', function(message){
                 io.to(message.user.chat_room).emit('chat_message', message);
+                // console.log(message);
         })
 })
 
