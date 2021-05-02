@@ -7,13 +7,13 @@ const io = require('socket.io')(http);
 const path = require('path');
 
 var server_port = 4000;
-var ip_addresses = [];
+// var ip_addresses = [];
 //for getting ip address
 var users = [];
 // var rooms = [];
 
-var os = require('os');
-var interfaces = os.networkInterfaces();
+// var os = require('os');
+// var interfaces = os.networkInterfaces();
 
 app.set('view engine', 'ejs');
 
@@ -21,7 +21,7 @@ app.use(express.static(path.join(__dirname,'public')));
 
 app.get('/', function(request, response){
         var appData = {
-                'server_ip_address': ip_addresses[0],
+                // 'server_ip_address': ip_addresses[0],
                 'server_port': server_port
         }
         response.render('index.ejs', {appData: appData});
