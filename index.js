@@ -6,11 +6,13 @@ const http = require('http').Server(app);
 const io = require('socket.io')(http);
 const path = require('path');
 
+var user_id_temp = 0;
+
 var server_port = 4000;
 // var ip_addresses = [];
 //for getting ip address
 var users = [];
-// var rooms = [];
+var rooms = [];
 
 // var os = require('os');
 // var interfaces = os.networkInterfaces();
@@ -38,6 +40,7 @@ io.sockets.on('connection', function(socket){
                 // if(!rooms.includes(room)){
                 //         rooms.push(room);
                 // }
+                // console.log(user.chat_room);
                 user.socket_id = socket.id;
                 socket.join(user.chat_room);
                           
@@ -53,6 +56,17 @@ io.sockets.on('connection', function(socket){
                 io.to(user.chat_room).emit('roomUsers', {
                   room: user.chat_room,
                   users: getRoomUsers(user.chat_room)
+                });
+              });
+              
+              socket.on('join_all_known_rooms', ( user ) => {
+                user.chat_rooms.forEach(function(this_room){
+                        // user_id_temp = user.id;
+                        // // rooms[this_room] = [];
+                        // rooms[this_room][user.id] = user;
+                        // console.log(rooms);
+                        // I was not successful on manipulating chat rooms and peoples
+                        socket.join(this_room);//join this user to the room
                 });
               });
 
@@ -92,6 +106,8 @@ io.sockets.on('connection', function(socket){
         })
         socket.on('chat_message', function(message){
                 io.to(message.user.chat_room).emit('chat_message', message);
+                //send message to commonroom
+                // io.to('commonroom').emit('commonroom_message', message);
                 // console.log(message);
         })
 })
